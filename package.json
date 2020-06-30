@@ -26,6 +26,7 @@
     },
     "dependencies": {
         "admin-lte": "^3.0.5",
+        "tailwindcss": "^1.4.6",
         "view-design": "^4.2.0"
     }
 }

@@ -12,7 +12,17 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::post('/app/create_tag','TestController@test');
+
+Route::post('/app/create_tag', 'AdminController@addTag');
+Route::get('/app/get_tags', 'AdminController@getTag');
+Route::post('/app/edit_tags', 'AdminController@editTag');
+Route::post('/app/delete_tags', 'AdminController@deleteTag');
+Route::post('/app/upload', 'AdminController@upload');
+
+
+
+
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -20,10 +30,6 @@ Route::get('/', function () {
 
 Auth::routes();
 
-// Route::get('/new','TestController@controllerMethod');
-
-Route::any('{slug}', function(){
-return view('welcome');
+Route::any('{slug}', function () {
+    return view('welcome');
 });
-
-// Route::get('/home', 'HomeController@index')->name('home');

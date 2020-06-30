@@ -20,34 +20,34 @@ export default {
 
         },
 
-        modalInfo(desc, title = "Hey") {
+        info(desc, title = "Hey") {
             this.$Notice.info({
                 title: title,
                 desc: desc
             });
         },
-        modalSuccess(desc, title = "Great") {
+        success(desc, title = "Great") {
             this.$Notice.success({
                 title: title,
                 desc: desc
             });
         },
-        modalWarning(desc, title = "Oops!") {
+        warning(desc, title = "Oops!") {
             this.$Notice.warning({
                 title: title,
                 desc: desc
             });
         },
-        modalError(desc, title = "Oops!") {
+        error(desc, title = "Oops!") {
             this.$Notice.error({
                 title: title,
                 desc: desc
             });
         },
-        modalSwr(desc='Something went wrong', title = "Hey") {
+        swr(desc='Something went wrong', title = "Hey") {
             this.$Notice.error({
                 title: title,
-                desc: des
+                desc: desc
             });
         },
 
