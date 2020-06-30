@@ -16,6 +16,7 @@
               <!-- TABLE TITLE -->
               <tr>
                 <th>ID</th>
+                <th>Icon image</th>
                 <th>Category name</th>
                 <th>Created at</th>
                 <th>Action</th>
@@ -23,23 +24,26 @@
               <!-- TABLE TITLE -->
 
               <!-- ITEMS -->
-              <tr v-for="(tag, i) in tags" :key="i" v-if="tags.length">
-                <td>{{tag.id}}</td>
-                <td class="_table_name">{{ tag.tagName }}</td>
-                <td>{{ tag.created_at }}</td>
+              <tr v-for="(category, i) in categoryLists" :key="i" v-if="categoryLists.length">
+                <td>{{category.id}}</td>
+                <td class="table_image">
+                  <img :src="category.iconImage" />
+                </td>
+                <td class="_table_name">{{ category.categoryName }}</td>
+                <td>{{ category.created_at }}</td>
                 <td>
                   <Button
                     class="_btn _action_btn edit_btn1"
                     type="info"
                     size="small"
-                    @click="showEditModal(tag, i)"
+                    @click="showEditModal(category, i)"
                   >Edit</Button>
                   <Button
                     class="_btn _action_btn make_btn1"
                     type="error"
                     size="small"
-                    @click="showDeletingModal(tag, i)"
-                    :loading="tag.isDeleting"
+                    @click="showDeletingModal(category, i)"
+                    :loading="category.isDeleting"
                   >Delete</Button>
                 </td>
               </tr>
@@ -50,12 +54,13 @@
 
         <!-- tag adding modal -->
         <Modal v-model="addModal" title="Add Category" :mask-closable="false" :closable="false">
-          <Input v-model="data.tagName" placeholder="Add Category name" />
+          <Input v-model="data.categoryName" placeholder="Add Category name" />
 
           <div style="margin-top:10px; margin-bottom: 10px"></div>
 
           <!-- upload -->
           <Upload
+            ref="uploads"
             type="drag"
             action="/app/upload"
             :headers="{'x-csrf-token': token, 'X-Requested-With': 'XMLHttpRequest'}"
@@ -73,7 +78,7 @@
           </Upload>
           <!-- endupload -->
           <div class="demo-upload-list" v-if="data.iconImage">
-            <img :src="`/uploads/${data.iconImage}`" />
+            <img :src="`${data.iconImage}`" />
             <div class="demo-upload-list-cover">
               <Icon type="ios-trash-outline" @click="deleteImage"></Icon>
             </div>
@@ -83,25 +88,54 @@
             <Button type="default" @click="addModal=false">Close</Button>
             <Button
               type="primary"
-              @click="addTag"
+              @click="addCategory"
               :disabled="isAdding"
               :loading="isAdding"
-            >{{isAdding ? 'Adding...' : 'Add tag'}}</Button>
+            >{{isAdding ? 'Adding...' : 'Add Category'}}</Button>
           </div>
         </Modal>
 
         <!-- tag editing modal -->
-        <Modal v-model="editModal" title="Edit tag" :mask-closable="false" :closable="false">
-          <Input v-model="editData.tagName" placeholder="Edit tag name" />
+        <Modal v-model="editModal" title="Edit Category" :mask-closable="false" :closable="false">
+          <Input v-model="editData.categoryName" placeholder="Edit Category name" />
+
+          <div style="margin-top:10px; margin-bottom: 10px"></div>
+
+          <!-- upload -->
+          <Upload
+            v-show="isIconImageNew"
+            ref="editDataUploads"
+            type="drag"
+            action="/app/upload"
+            :headers="{'x-csrf-token': token, 'X-Requested-With': 'XMLHttpRequest'}"
+            :on-success="handleSuccess"
+            :format="['jpg','jpeg','png']"
+            :max-size="2048"
+            :on-format-error="handleFormatError"
+            :on-error="handleError"
+            :on-exceeded-size="handleMaxSize"
+          >
+            <div style="padding: 20px 0">
+              <Icon type="ios-cloud-upload" size="52" style="color: #3399ff"></Icon>
+              <p>Click or drag files here to upload</p>
+            </div>
+          </Upload>
+          <!-- endupload -->
+          <div class="demo-upload-list" v-if="editData.iconImage">
+            <img :src="`${editData.iconImage}`" />
+            <div class="demo-upload-list-cover">
+              <Icon type="ios-trash-outline" @click="deleteImage(false)"></Icon>
+            </div>
+          </div>
 
           <div slot="footer">
-            <Button type="default" @click="editModal=false">Close</Button>
+            <Button type="default" @click="closeEditModal">Close</Button>
             <Button
               type="primary"
-              @click="editTag"
+              @click="editCategory"
               :disabled="isAdding"
               :loading="isAdding"
-            >{{isAdding ? 'Editing...' : 'Edit tag'}}</Button>
+            >{{isAdding ? 'Editing...' : 'Edit Category'}}</Button>
           </div>
         </Modal>
         <!-- Delete Alert Modal  -->
@@ -112,7 +146,7 @@
             <span>Delete confirmation</span>
           </p>
           <div style="text-align:center">
-            <p>Are you sure you want to delete this tag?</p>
+            <p>Are you sure you want to delete this category?</p>
           </div>
           <div slot="footer">
             <Button
@@ -121,7 +155,7 @@
               long
               :loading="isDeleting"
               :disabled="isDeleting"
-              @click="deleteTag"
+              @click="deleteCategory"
             >Delete</Button>
           </div>
         </Modal>
@@ -142,50 +176,69 @@ export default {
       addModal: false,
       editModal: false,
       isAdding: false,
-      tags: [],
+      categoryLists: [],
       editData: {
-        tagName: ""
+        iconImage: "",
+        categoryName: ""
       },
       index: -1,
       showDeleteModal: false,
       isDeleting: false,
       deleteItem: {},
       deleteIndex: -1,
-      token: ""
+      token: "",
+      isIconImageNew: false,
+      isEditingItem: false
     };
   },
   methods: {
-    async addTag() {
-      if (this.data.tagName.trim() == "")
-        return this.error("Tag name is required");
-      const res = await this.callApi("post", "/app/create_tag", this.data);
+    async addCategory() {
+      if (this.data.categoryName.trim() == "")
+        return this.error("Category name is required");
+      if (this.data.iconImage.trim() == "")
+        return this.error("Icon image is required");
+      this.data.iconImage = `${this.data.iconImage}`;
+      const res = await this.callApi("post", "/app/create_category", this.data);
       if (res.status == 201) {
-        this.tags.unshift(res.data); // tags[]에 역순으로 삽입
-        this.success("Tag has been added successfully");
+        this.categoryLists.unshift(res.data); // category[]에 역순으로 삽입
+        this.success("Category has been added successfully");
         this.addModal = false;
-        this.data.tagName = ""; // 이후 tagName 초기화
+        this.data.categoryName = ""; // 이후 categoryName 초기화
       } else {
         if (res.status == 422) {
-          if (res.data.errors.tagName) {
-            this.info(res.data.errors.tagName[0]);
+          if (res.data.errors.categoryName) {
+            this.error(res.data.errors.categoryName[0]);
+          }
+          if (res.data.errors.iconImage) {
+            this.error(res.data.errors.iconImage[0]);
           }
         }
         this.swr();
       }
     },
 
-    async editTag() {
-      if (this.editData.tagName.trim() == "")
-        return this.error("Tag name is required");
-      const res = await this.callApi("post", "/app/edit_tags", this.editData);
+    async editCategory() {
+      if (this.editData.categoryName.trim() == "")
+        return this.error("Category name is required");
+      if (this.editData.iconImage.trim() == "")
+        return this.error("Icon image is required");
+
+      const res = await this.callApi(
+        "post",
+        "/app/edit_category",
+        this.editData
+      );
       if (res.status == 200) {
-        this.tags[this.index].tagName = this.editData.tagName;
-        this.success("Tag has been edited successfully");
+        this.categoryLists[this.index].categoryName = this.editData.categoryName;
+        this.success("Category has been edited successfully");
         this.editModal = false;
       } else {
         if (res.status == 422) {
-          if (res.data.errors.tagName) {
-            this.info(res.data.errors.tagName[0]);
+          if (res.data.errors.categoryName) {
+            this.error(res.data.errors.categoryName[0]);
+          }
+          if (res.data.errors.iconImage) {
+            this.error(res.data.errors.iconImage[0]);
           }
         } else {
           this.swr();
@@ -193,40 +246,46 @@ export default {
       }
     },
 
-    showEditModal(tag, index) {
-      let obj = {
-        id: tag.id,
-        tagName: tag.tagName
-      };
-      this.editData = obj;
+    showEditModal(category, index) {
+      //   let obj = {
+      //     id: category.id,
+      //     categoryName: category.categoryName
+      //   };
+      this.editData = category;
       this.editModal = true;
       this.index = index;
+      this.isEditingItem = true;
     },
-    async deleteTag() {
+    async deleteCategory() {
       //   if (!confirm("Are you sure you want to delete this tag?")) return;
       //   //$set = 새로운 속성을 삽입, 현재 tag에는 isDeleting 이라는 속성이 없기때문에 this.isDeleting = true 는 안됨.
       //   this.$set(tag, "isDeleting", true);
       this.isDeleting = true;
       const res = await this.callApi(
         "post",
-        "/app/delete_tags",
+        "/app/delete_category",
         this.deleteItem
       );
       if ((res.status = 200)) {
-        this.tags.splice(this.deleteIndex, 1); // i(index)위치에서 1개만큼 삭제
-        this.success("Tag has been successfully deleted!");
+        this.categoryLists.splice(this.deleteIndex, 1); // i(index)위치에서 1개만큼 삭제
+        this.success("Category has been successfully deleted!");
       } else {
         this.swr();
       }
       this.isDeleting = false;
       this.showDeleteModal = false;
     },
-    showDeletingModal(tag, index) {
+    showDeletingModal(category, index) {
       this.deleteIndex = index;
-      this.deleteItem = tag;
+      this.deleteItem = category;
       this.showDeleteModal = true;
+      this.isEditingItem = true;
     },
     handleSuccess(res, file) {
+      res = `/uploads/${res}`;
+      if (this.isEditingItem) {
+        return (this.editData.iconImage = res);
+      }
       this.data.iconImage = res;
     },
     handleError(res, file) {
@@ -253,24 +312,46 @@ export default {
       });
     },
 
-    async deleteImage(){
-        console.log(this.data.iconImage);
-
+    async deleteImage(isAdd = true) {
+      // for editing
+      let image
+      if (!isAdd) {
+        this.isIconImageNew = true;
+        let image = this.editData.iconImage;
+        this.editData.iconImage = "";
+        this.$refs.editDataUploads.clearFiles();
+      } else {
+        image = this.data.iconImage;
+        this.data.iconImage = "";
+        this.$refs.uploads.clearFiles();
+      }
+      const res = await this.callApi("post", "/app/delete_image", {
+        imageName: image
+      });
+      if (res.status != 200) {
+        this.data.iconImage = image;
+        this.swr();
+      }
+      console.log(this.data.iconImage);
+    },
+    closeEditModal() {
+      this.isEditingItem = false;
+      this.editModal = false;
     }
   },
 
   async created() {
     this.token = window.Laravel.csrfToken;
-    const res = await this.callApi("get", "/app/get_tags");
+    const res = await this.callApi("get", "/app/get_category");
     if ((res.status = 200)) {
-      this.tags = res.data;
+      this.categoryLists = res.data;
     } else {
       this.swr();
     }
   }
   // async created() {
   //   const res = await this.callApi("POST", "/app/create_tag", {
-  //     tagName: "testtag"
+  //     categoryName: "testtag"
   //   });
   //   if (res.status == 200) {
   //     //   console.log(res);
