@@ -7,7 +7,7 @@
           <p class="_title0">
             Tags
             <Button @click="addModal=true">
-              <Icon type="md-add" />Add tag
+              <Icon type="md-add" />Add admin
             </Button>
           </p>
 
@@ -16,30 +16,34 @@
               <!-- TABLE TITLE -->
               <tr>
                 <th>ID</th>
-                <th>Tag name</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>User type</th>
                 <th>Created at</th>
                 <th>Action</th>
               </tr>
               <!-- TABLE TITLE -->
 
               <!-- ITEMS -->
-              <tr v-for="(tag, i) in tags" :key="i" v-if="tags.length">
-                <td>{{tag.id}}</td>
-                <td class="_table_name">{{ tag.tagName }}</td>
-                <td>{{ tag.created_at }}</td>
+              <tr v-for="(user, i) in users" :key="i" v-if="users.length">
+                <td>{{user.id}}</td>
+                <td class="_table_name">{{ user.fullName }}</td>
+                <td class>{{ user.email }}</td>
+                <td class>{{ user.userType }}</td>
+                <td>{{ user.created_at }}</td>
                 <td>
                   <Button
                     class="_btn _action_btn edit_btn1"
                     type="info"
                     size="small"
-                    @click="showEditModal(tag, i)"
+                    @click="showEditModal(user, i)"
                   >Edit</Button>
                   <Button
                     class="_btn _action_btn make_btn1"
                     type="error"
                     size="small"
-                    @click="showDeletingModal(tag, i)"
-                    :loading="tag.isDeleting"
+                    @click="showDeletingModal(user, i)"
+                    :loading="user.isDeleting"
                   >Delete</Button>
                 </td>
               </tr>
@@ -49,17 +53,30 @@
         </div>
 
         <!-- tag adding modal -->
-        <Modal v-model="addModal" title="Add tag" :mask-closable="false" :closable="false">
-          <Input v-model="data.tagName" placeholder="Add tag name" />
-
+        <Modal v-model="addModal" title="Add admin" :mask-closable="false" :closable="false">
+          <div class="space">
+            <Input type="text" v-model="data.fullName" placeholder="Full name" />
+          </div>
+          <div class="space">
+            <Input type="email" v-model="data.email" placeholder="email" />
+          </div>
+          <div class="space">
+            <Input type="password" v-model="data.password" placeholder="Password" />
+          </div>
+          <div class="space">
+            <Select v-model="data.userType" placeholder="Select admin type">
+              <Option value="Admin">Admin</Option>
+              <Option value="Editor">Editor</Option>
+            </Select>
+          </div>
           <div slot="footer">
             <Button type="default" @click="addModal=false">Close</Button>
             <Button
               type="primary"
-              @click="addTag"
+              @click="addAdmin"
               :disabled="isAdding"
               :loading="isAdding"
-            >{{isAdding ? 'Adding...' : 'Add tag'}}</Button>
+            >{{isAdding ? 'Adding...' : 'Add admin'}}</Button>
           </div>
         </Modal>
 
@@ -112,12 +129,15 @@ export default {
   data() {
     return {
       data: {
-        tagName: ""
+        fullName: "",
+        email: "",
+        password: "",
+        userType: ""
       },
       addModal: false,
       editModal: false,
       isAdding: false,
-      tags: [],
+      users: [],
       editData: {
         tagName: ""
       },
@@ -129,19 +149,25 @@ export default {
     };
   },
   methods: {
-    async addTag() {
-      if (this.data.tagName.trim() == "")
-        return this.error("Tag name is required");
-      const res = await this.callApi("post", "/app/create_tag", this.data);
+    async addAdmin() {
+      if (this.data.fullName.trim() == "")
+        return this.error("Full name is required");
+      if (this.data.email.trim() == "") return this.error("Email is required");
+      if (this.data.password.trim() == "")
+        return this.error("Password is required");
+      if (this.data.fullName.trim() == "")
+        return this.error("User type is required");
+
+      const res = await this.callApi("post", "/app/create_user", this.data);
       if (res.status == 201) {
         this.tags.unshift(res.data); // tags[]에 역순으로 삽입
-        this.success("Tag has been added successfully");
+        this.success("Admin has been added successfully");
         this.addModal = false;
         this.data.tagName = ""; // 이후 tagName 초기화
       } else {
         if (res.status == 422) {
-          if (res.data.errors.tagName) {
-            this.info(res.data.errors.tagName[0]);
+          for (let i in res.data.errors) {
+            this.error(res.data.errors[i]);
           }
         }
         this.swr();
@@ -186,14 +212,13 @@ export default {
         isDeleted: false
       };
       this.$store.commit("setDeleteModalObj", deleteModalObj);
-    },
-
+    }
   },
 
   async created() {
-    const res = await this.callApi("get", "/app/get_tags");
+    const res = await this.callApi("get", "/app/get_users");
     if ((res.status = 200)) {
-      this.tags = res.data;
+      this.users = res.data;
     } else {
       this.swr();
     }
@@ -209,8 +234,7 @@ export default {
       console.log(obj);
 
       if (obj.isDeleted) {
-        this.tags.splice(obj.deleteIndex-1, 1);
-
+        this.tags.splice(obj.deleteIndex - 1, 1);
       }
     }
   }

@@ -6,11 +6,13 @@ import firstpage from './components/pages/myFirstVuePage';
 import secondpage from './components/pages/mySecondVuePage';
 import hooks from './components/pages/basic/hooks';
 import methods from './components/pages/basic/methods';
+import usecom from './vuex/usecom.vue';
 
 //admin project routes
 import home from './components/pages/home';
 import tags from './admin/pages/tags'
 import category from './admin/pages/category'
+import adminusers from './admin/pages/adminusers.vue';
 
 Vue.use(Router);
 
@@ -30,6 +32,14 @@ const routes = [
     {
         path: '/category',
         component: category,
+    },
+    {
+        path: '/testvuex',
+        component: usecom,
+    },
+    {
+        path: '/adminusers',
+        component: adminusers,
     },
 
 

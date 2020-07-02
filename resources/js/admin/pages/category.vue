@@ -140,32 +140,15 @@
         </Modal>
         <!-- Delete Alert Modal  -->
 
-        <Modal v-model="showDeleteModal" width="360">
-          <p slot="header" style="color:#f60;text-align:center">
-            <Icon type="ios-information-circle"></Icon>
-            <span>Delete confirmation</span>
-          </p>
-          <div style="text-align:center">
-            <p>Are you sure you want to delete this category?</p>
-          </div>
-          <div slot="footer">
-            <Button
-              type="error"
-              size="large"
-              long
-              :loading="isDeleting"
-              :disabled="isDeleting"
-              @click="deleteCategory"
-            >Delete</Button>
-          </div>
-        </Modal>
-        <!--  -->
+        <deleteModal></deleteModal>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import deleteModal from "./components/deleteModal";
+import { mapGetters } from "vuex";
 export default {
   data() {
     return {
@@ -193,10 +176,15 @@ export default {
   },
   methods: {
     async addCategory() {
-      if (this.data.categoryName.trim() == "")
+      this.isAdding = true;
+      if (this.data.categoryName.trim() == "") {
+        this.isAdding = false;
         return this.error("Category name is required");
-      if (this.data.iconImage.trim() == "")
+      }
+      if (this.data.iconImage.trim() == "") {
+        this.isAdding = false;
         return this.error("Icon image is required");
+      }
       this.data.iconImage = `${this.data.iconImage}`;
       const res = await this.callApi("post", "/app/create_category", this.data);
       if (res.status == 201) {
@@ -204,6 +192,7 @@ export default {
         this.success("Category has been added successfully");
         this.addModal = false;
         this.data.categoryName = ""; // 이후 categoryName 초기화
+        this.data.iconImage = "";
       } else {
         if (res.status == 422) {
           if (res.data.errors.categoryName) {
@@ -215,6 +204,7 @@ export default {
         }
         this.swr();
       }
+      this.isAdding = false;
     },
 
     async editCategory() {
@@ -229,7 +219,9 @@ export default {
         this.editData
       );
       if (res.status == 200) {
-        this.categoryLists[this.index].categoryName = this.editData.categoryName;
+        this.categoryLists[
+          this.index
+        ].categoryName = this.editData.categoryName;
         this.success("Category has been edited successfully");
         this.editModal = false;
       } else {
@@ -256,30 +248,16 @@ export default {
       this.index = index;
       this.isEditingItem = true;
     },
-    async deleteCategory() {
-      //   if (!confirm("Are you sure you want to delete this tag?")) return;
-      //   //$set = 새로운 속성을 삽입, 현재 tag에는 isDeleting 이라는 속성이 없기때문에 this.isDeleting = true 는 안됨.
-      //   this.$set(tag, "isDeleting", true);
-      this.isDeleting = true;
-      const res = await this.callApi(
-        "post",
-        "/app/delete_category",
-        this.deleteItem
-      );
-      if ((res.status = 200)) {
-        this.categoryLists.splice(this.deleteIndex, 1); // i(index)위치에서 1개만큼 삭제
-        this.success("Category has been successfully deleted!");
-      } else {
-        this.swr();
-      }
-      this.isDeleting = false;
-      this.showDeleteModal = false;
-    },
+
     showDeletingModal(category, index) {
-      this.deleteIndex = index;
-      this.deleteItem = category;
-      this.showDeleteModal = true;
-      this.isEditingItem = true;
+      const deleteModalObj = {
+        showDeleteModal: true,
+        deleteUrl: "/app/delete_category",
+        data: category,
+        deleteIndex: index,
+        isDeleted: false
+      };
+      this.$store.commit("setDeleteModalObj", deleteModalObj);
     },
     handleSuccess(res, file) {
       res = `/uploads/${res}`;
@@ -314,7 +292,7 @@ export default {
 
     async deleteImage(isAdd = true) {
       // for editing
-      let image
+      let image;
       if (!isAdd) {
         this.isIconImageNew = true;
         let image = this.editData.iconImage;
@@ -348,7 +326,24 @@ export default {
     } else {
       this.swr();
     }
+  },
+  components: {
+    deleteModal
+  },
+
+  computed: {
+    ...mapGetters(["getDeleteModalObj"])
+  },
+  watch: {
+    getDeleteModalObj(obj) {
+      console.log(obj);
+
+      if (obj.isDeleted) {
+        this.categoryLists.splice(obj.deleteIndex, 1);
+      }
+    }
   }
+
   // async created() {
   //   const res = await this.callApi("POST", "/app/create_tag", {
   //     categoryName: "testtag"
