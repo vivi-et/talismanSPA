@@ -121,6 +121,7 @@ class AdminController extends Controller
             'userType' => 'required'
         ]);
 
+        // bcrypt 사용
         $password = bcrypt($request->password);
 
         $user = User::create([
