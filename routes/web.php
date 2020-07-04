@@ -28,8 +28,11 @@ Route::get('/app/get_category', 'AdminController@getCategory');
 Route::post('/app/edit_category', 'AdminController@editCategory');
 Route::post('/app/delete_category', 'AdminController@deleteCategory');
 
-Route::get('/app/get_users', 'AdminController@getUser');
 Route::post('/app/create_user', 'AdminController@addUser');
+Route::get('/app/get_users', 'AdminController@getUser');
+Route::post('/app/edit_user', 'AdminController@editUser');
+
+Route::post('/app/admin_login', 'AdminController@adminLogin');
 
 
 
@@ -37,7 +40,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Auth::routes();
+// Auth::routes();
 
 Route::any('{slug}', function () {
     return view('welcome');

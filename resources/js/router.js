@@ -14,6 +14,8 @@ import tags from './admin/pages/tags'
 import category from './admin/pages/category'
 import adminusers from './admin/pages/adminusers.vue';
 
+import login from './admin/pages/login';
+
 Vue.use(Router);
 
 const routes = [
@@ -40,6 +42,11 @@ const routes = [
     {
         path: '/adminusers',
         component: adminusers,
+    },
+
+    {
+        path: '/login',
+        component: login,
     },
 
 
