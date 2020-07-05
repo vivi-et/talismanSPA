@@ -42,6 +42,7 @@ export default {
       const res = await this.callApi("post", "/app/admin_login", this.data);
       if (res.status === 200) {
         this.success(res.data.msg);
+        window.location = '/';
       } else {
         if (res.status === 401) {
           this.error(res.data.msg);
