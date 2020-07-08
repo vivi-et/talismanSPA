@@ -228,6 +228,7 @@ class AdminController extends Controller
       'password' => $request->password
     ])) {
       $user = Auth::user();
+      \Log::info($user->role());
 
       if ($user->userType == 'User') {
         Auth::logout();
@@ -252,10 +253,11 @@ class AdminController extends Controller
     $this->validate($request, [
       'roleName' => 'required'
     ]);
-    $role = Role::create([
+    return Role::create([
       'roleName' => $request->roleName,
     ]);
   }
+
   public function getRole()
   {
     return Role::orderBy('id', 'desc')->get();
@@ -271,5 +273,10 @@ class AdminController extends Controller
     return Role::where('id', $request->id)->update([
       'roleName' => $request->roleName
     ]);
+  }
+
+  public function deleteRole(Request $request)
+  {
+    return Role::where('id', $request->id)->delete();
   }
 }

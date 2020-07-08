@@ -3204,6 +3204,8 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                   _this.roles.unshift(res.data); // roles[]에 역순으로 삽입
 
 
+                  console.log(res.data);
+
                   _this.success("Role has been added successfully");
 
                   _this.addModal = false;

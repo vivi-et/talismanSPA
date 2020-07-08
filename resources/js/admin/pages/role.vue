@@ -115,6 +115,7 @@ export default {
       const res = await this.callApi("post", "/app/create_role", this.data);
       if (res.status == 201) {
         this.roles.unshift(res.data); // roles[]에 역순으로 삽입
+        console.log(res.data);
         this.success("Role has been added successfully");
         this.addModal = false;
         this.data.roleName = ""; // 이후 roleName 초기화
@@ -192,7 +193,6 @@ export default {
       }
     }
   }
-
 };
 </script>
 

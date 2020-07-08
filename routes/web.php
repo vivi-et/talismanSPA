@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 // /app/ 으로 시작하는 주소들
+
+// Route::post('app/create_user', 'AdminController@addUser');
 Route::prefix('app')->middleware([AdminCheck::class])->group(function () {
   //Tag CRUD
   Route::post('/create_tag', 'AdminController@addTag');
@@ -41,6 +43,7 @@ Route::prefix('app')->middleware([AdminCheck::class])->group(function () {
   //Role CRUD
   Route::post('/create_role', 'AdminController@addRole');
   Route::post('/edit_roles', 'AdminController@editRole');
+  Route::post('/delete_roles', 'AdminController@deleteRole');
   Route::get('/get_roles', 'AdminController@getRole');
 });
 
